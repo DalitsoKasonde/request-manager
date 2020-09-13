@@ -86,7 +86,14 @@ class RequestController extends Controller
      */
     public function edit($id)
     {
-        //
+
+        $client = new Client();
+
+        $response = $client->get('http://itemapi.test/api/items/'.$id);
+
+        $item = json_decode($response->getBody()->getContents());
+
+        return view('edit')->with('item', $item);
     }
 
     /**
@@ -98,7 +105,29 @@ class RequestController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $this->validate($request, [
+            'text' => 'required',
+            'body' => 'required'
+        ]);
+
+        $client = new Client();
+
+        try {
+
+            $response = $client->post('http://itemapi.test/api/items/'.$id.'?text='.$request->input('text').'&body='.$request->input('body').'&_method=PUT');
+
+        } catch(RequestException $e) {
+
+            if ($e->hasResponse()) {
+                $msg = $e->getResponse();
+            } else {
+                $msg = 'Item could not be updated.';
+            }
+            return redirect()->to('/')->with('error', $msg);
+        }
+
+
+        return redirect()->to('/')->with('success', 'Item  updated successfully' );
     }
 
     /**
